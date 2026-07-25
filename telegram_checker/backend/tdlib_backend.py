@@ -206,9 +206,7 @@ class TDLibBackend(TelegramBackend):
                 }
             })
             
-            if res.get("@type") == "ok":
-                return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
-            elif res.get("@type") == "error":
+            if res.get("@type") == "error":
                 msg = res.get("message", "")
                 msg_upper = msg.upper()
                 code = res.get("code")
@@ -222,8 +220,22 @@ class TDLibBackend(TelegramBackend):
                     raise BackendFloodWaitError(60)
                 else:
                     raise BackendError(msg)
-            else:
-                return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
+            
+            # إذا نجح الطلب (ok)، يجب أن ننتظر تحديث حالة العميل لمعرفة هل الرقم مسجل أم لا
+            await asyncio.sleep(1.5)
+            
+            state_res = await client.send({"@type": "getAuthorizationState"})
+            state_type = state_res.get("@type")
+            
+            if state_type == "authorizationStateWaitCode":
+                if state_res.get("is_registered") == False:
+                    raise BackendPhoneUnoccupiedError()
+                else:
+                    return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
+            elif state_type == "authorizationStateWaitPassword":
+                raise BackendSessionPasswordNeededError()
+                
+            return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
                 
         finally:
             client.stop()

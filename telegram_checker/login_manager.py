@@ -51,6 +51,11 @@ class LoginManager:
                 "application_version": "10.14.5",
                 "enable_storage_optimizer": True
             })
+            
+            await client_inst.send({
+                "@type": "checkDatabaseEncryptionKey",
+                "encryption_key": ""
+            })
             backend = BackendFactory.create_backend(client_inst)
         else:
             from telethon import TelegramClient

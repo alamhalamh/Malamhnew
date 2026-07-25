@@ -155,10 +155,74 @@ class TDLibBackend(TelegramBackend):
 
     async def check_layer3_send_code(self, phone: str, api_id: int, api_hash: str) -> Dict[str, Any]:
         """
-        [قيد الانتظار]
-        سيتم تنفيذ هذه الواجهة باستخدام Ephemeral TDLib Client بعد انتهاء تقييم الاختبارات.
+        تنفيذ الطبقة الثالثة (Layer 3) باستخدام عميل TDLib مؤقت (Ephemeral Client)
+        نظراً لأن العميل الأساسي يكون في حالة (authorizationStateReady) ولا يمكنه إرسال رمز تسجيل الدخول.
         """
-        raise NotImplementedError("Layer 3 is pending validation for TDLibBackend.")
+        import uuid
+        import os
+        import shutil
+        from telegram_checker.backend.tdlib_binding.core import TDLibClient
+        
+        session_dir = f"temp_tdlib_session_{uuid.uuid4().hex[:8]}"
+        client = TDLibClient()
+        client.start()
+        
+        try:
+            await client.send({
+                "@type": "setTdlibParameters",
+                "use_test_dc": False,
+                "database_directory": session_dir,
+                "use_file_database": False, 
+                "use_chat_info_database": False,
+                "use_message_database": False,
+                "api_id": api_id,
+                "api_hash": api_hash,
+                "system_language_code": "en",
+                "device_model": "Layer3 Checker",
+                "application_version": "1.0",
+                "enable_storage_optimizer": True
+            })
+            
+            await client.send({
+                "@type": "checkDatabaseEncryptionKey",
+                "encryption_key": ""
+            })
+            
+            await asyncio.sleep(1.0)  # انتظار انتقال الحالة
+            
+            res = await client.send({
+                "@type": "setAuthenticationPhoneNumber",
+                "phone_number": phone,
+                "settings": {
+                    "@type": "phoneNumberAuthenticationSettings",
+                    "allow_flash_call": False,
+                    "is_current_phone_number": False,
+                    "allow_sms_retriever_api": False
+                }
+            })
+            
+            if res.get("@type") == "ok":
+                return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
+            elif res.get("@type") == "error":
+                msg = res.get("message", "")
+                code = res.get("code")
+                if "BANNED" in msg:
+                    raise BackendPhoneBannedError()
+                elif "UNOCCUPIED" in msg or "NOT_FOUND" in msg or "INVALID" in msg:
+                    raise BackendPhoneUnoccupiedError()
+                elif "SESSION_PASSWORD_NEEDED" in msg:
+                    raise BackendSessionPasswordNeededError()
+                elif code == 429:
+                    raise BackendFloodWaitError(60)
+                else:
+                    raise BackendError(msg)
+            else:
+                return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
+                
+        finally:
+            client.stop()
+            if os.path.exists(session_dir):
+                shutil.rmtree(session_dir, ignore_errors=True)
 
     # ================= الرسائل =================
     async def send_message(self, username: str, text: str):

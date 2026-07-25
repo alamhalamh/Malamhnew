@@ -90,6 +90,11 @@ class TelegramClientManager:
                 "enable_storage_optimizer": True
             })
             
+            await tdlib_client.send({
+                "@type": "checkDatabaseEncryptionKey",
+                "encryption_key": ""
+            })
+            
             if proxy:
                 proxy_type = proxy[0]
                 host = proxy[1]

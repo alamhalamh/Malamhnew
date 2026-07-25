@@ -673,7 +673,7 @@ async def add_pending_subscription(user_id, plan, payment_method, amount_crypto,
             amount_crypto = EXCLUDED.amount_crypto,
             wallet_address = EXCLUDED.wallet_address,
             created_at = CURRENT_TIMESTAMP
-    """, (user_id, plan, payment_method, amount_crypto, wallet_address))
+    """, (user_id, str(plan) if plan else "", str(payment_method) if payment_method else "", str(amount_crypto), str(wallet_address) if wallet_address else ""))
 
 async def get_pending_subscription(user_id):
     return await db_execute("SELECT plan, payment_method, amount_crypto, wallet_address, created_at FROM pending_subscriptions WHERE user_id = %s", (user_id,), commit=False, fetch='one')

@@ -399,7 +399,7 @@ async def show_user_management(update: Update, page=0):
                     return await cursor.fetchall()
                 finally:
                     await cursor.close()
-        rows = await (_get_users)
+        rows = await _get_users()
     except Exception as e:
         await query.answer(f"خطأ: {e}", show_alert=True)
         return
@@ -435,7 +435,7 @@ async def show_user_management(update: Update, page=0):
                     return (await cursor.fetchone())[0]
                 finally:
                     await cursor.close()
-        total = await (_get_total)
+        total = await _get_total()
         if offset + per_page < total:
             nav_row.append(InlineKeyboardButton("التالي ➡️", callback_data=f"user_page_{page+1}"))
         if nav_row:
@@ -849,7 +849,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             return await cursor.fetchall()
                         finally:
                             await cursor.close()
-                rows = await (_get_ids)
+                rows = await _get_ids()
                 if rows:
                     user_list = "\n".join([f"👤 ID: `{row[0]}`" for row in rows])
                 else:

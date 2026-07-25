@@ -45,6 +45,13 @@ class TDLibClient:
         except OSError as e:
             raise TDLibBindingException(f"Failed to load TDLib from {lib_path}: {e}")
 
+        # كتم سجلات TDLib المزعجة التي تظهر في الـ Terminal
+        try:
+            self.lib.td_set_log_verbosity_level.argtypes = [ctypes.c_int]
+            self.lib.td_set_log_verbosity_level(1)
+        except Exception:
+            pass
+
         # تعريف تواقيع دوال C
         self.lib.td_json_client_create.restype = ctypes.c_void_p
         self.lib.td_json_client_send.argtypes = [ctypes.c_void_p, ctypes.c_char_p]

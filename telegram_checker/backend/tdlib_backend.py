@@ -188,6 +188,9 @@ class TDLibBackend(TelegramBackend):
                 "encryption_key": ""
             })
             
+            if hasattr(self.client, "proxy_payload") and self.client.proxy_payload:
+                await client.send(self.client.proxy_payload)
+            
             await asyncio.sleep(1.0)  # انتظار انتقال الحالة
             
             res = await client.send({

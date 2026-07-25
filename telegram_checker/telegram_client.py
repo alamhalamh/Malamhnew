@@ -106,13 +106,15 @@ class TelegramClientManager:
                 if proxy_type == socks.HTTP:
                     tdlib_proxy_type = {"@type": "proxyTypeHttp", "username": username, "password": password, "http_only": False}
                 
-                await tdlib_client.send({
+                proxy_payload = {
                     "@type": "addProxy",
                     "server": host,
                     "port": port,
                     "enable": True,
                     "type": tdlib_proxy_type
-                })
+                }
+                tdlib_client.proxy_payload = proxy_payload
+                await tdlib_client.send(proxy_payload)
             
             return BackendFactory.create_backend(tdlib_client)
             

@@ -288,10 +288,14 @@ class SmartCheckStrategy:
                     is_success = True
                     return ext_result
                 logger.warning(f"[Layer 4: ExternalBot] Failed to get clear response.")
-                return {"status": "INACCURATE", "phone": phone, "status_text": "⚠️ فحص ليس دقيق (فشل البوت الخارجي)"}
+                is_success = True
+                result["status_text"] = "⚠️ الرقم لديه جلسة (فشل البوت الخارجي)"
+                return result
             else:
                 logger.warning(f"[Layer 4: ExternalBot] Not configured. Cannot determine accuracy.")
-                return {"status": "INACCURATE", "phone": phone, "status_text": "⚠️ فحص ليس دقيق (يرجى ربط بوت خارجي)"}
+                is_success = True
+                result["status_text"] = "⚠️ الرقم لديه جلسة (بدون بوت خارجي)"
+                return result
 
         except BackendPhoneUnoccupiedError:
             logger.info(f"[Layer 3] Unoccupied error. Phone is Not Registered. (Phone: {phone})")

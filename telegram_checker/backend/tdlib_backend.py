@@ -110,9 +110,10 @@ class TDLibBackend(TelegramBackend):
         
         if res.get("@type") == "error":
             msg = res.get("message", "")
+            msg_upper = msg.upper()
             if res.get("code") == 429:
                 raise BackendFloodWaitError(60)
-            if "UNAUTHORIZED" in msg:
+            if "UNAUTHORIZED" in msg_upper:
                 raise BackendSessionUnauthorizedError()
             raise BackendError(msg)
             
@@ -136,15 +137,16 @@ class TDLibBackend(TelegramBackend):
         if res.get("@type") == "error":
             code = res.get("code")
             msg = res.get("message", "")
+            msg_upper = msg.upper()
             if code == 429:
                 raise BackendFloodWaitError(60)
-            if code == 404 or "NOT_FOUND" in msg:
+            if code == 404 or "NOT_FOUND" in msg_upper:
                 raise BackendPhoneUnoccupiedError()
-            if code == 403 or "PRIVACY" in msg:
+            if code == 403 or "PRIVACY" in msg_upper:
                 raise BackendPrivacyError()
-            if "BANNED" in msg:
+            if "BANNED" in msg_upper:
                 raise BackendPhoneBannedError()
-            if "UNAUTHORIZED" in msg:
+            if "UNAUTHORIZED" in msg_upper:
                 raise BackendSessionUnauthorizedError()
             raise BackendError(msg)
             
@@ -208,12 +210,13 @@ class TDLibBackend(TelegramBackend):
                 return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
             elif res.get("@type") == "error":
                 msg = res.get("message", "")
+                msg_upper = msg.upper()
                 code = res.get("code")
-                if "BANNED" in msg:
+                if "BANNED" in msg_upper:
                     raise BackendPhoneBannedError()
-                elif "UNOCCUPIED" in msg or "NOT_FOUND" in msg or "INVALID" in msg:
+                elif "UNOCCUPIED" in msg_upper or "NOT_FOUND" in msg_upper or "INVALID" in msg_upper:
                     raise BackendPhoneUnoccupiedError()
-                elif "SESSION_PASSWORD_NEEDED" in msg:
+                elif "SESSION_PASSWORD_NEEDED" in msg_upper:
                     raise BackendSessionPasswordNeededError()
                 elif code == 429:
                     raise BackendFloodWaitError(60)

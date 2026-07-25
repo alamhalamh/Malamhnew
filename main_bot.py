@@ -137,7 +137,7 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
         table_name = get_correct_table_name()
         if action == "add_days":
             try:
-                target_id, value = text.split(" ")
+                target_id, value = text.split()
                 target_id = int(target_id)
                 await db.add_days_to_user(target_id, int(value))
                 await db.log_activity(user_id, "إضافة أيام", f"للمستخدم {target_id} - {value} يوم")
@@ -148,7 +148,7 @@ async def handle_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         elif action == "ban":
             try:
-                target_id, value = text.split(" ")
+                target_id, value = text.split()
                 target_id = int(target_id)
                 await db.ban_user(target_id, int(value))
                 await db.log_activity(user_id, "حظر/إلغاء حظر", f"مستخدم {target_id} - حالة {value}")

@@ -201,6 +201,7 @@ class TDLibBackend(TelegramBackend):
             
             await asyncio.sleep(1.0)  # انتظار انتقال الحالة
             
+            logger.info(f"[Layer 3 - TDLib] Sending setAuthenticationPhoneNumber for {phone}...")
             res = await client.send({
                 "@type": "setAuthenticationPhoneNumber",
                 "phone_number": phone,
@@ -211,6 +212,7 @@ class TDLibBackend(TelegramBackend):
                     "allow_sms_retriever_api": False
                 }
             })
+            logger.info(f"[Layer 3 - TDLib] setAuthenticationPhoneNumber Raw Response: {res}")
             
             if res.get("@type") == "error":
                 msg = res.get("message", "")
@@ -230,17 +232,26 @@ class TDLibBackend(TelegramBackend):
             # إذا نجح الطلب (ok)، يجب أن ننتظر تحديث حالة العميل لمعرفة هل الرقم مسجل أم لا
             await asyncio.sleep(1.5)
             
+            logger.info(f"[Layer 3 - TDLib] Fetching getAuthorizationState for {phone}...")
             state_res = await client.send({"@type": "getAuthorizationState"})
+            logger.info(f"[Layer 3 - TDLib] getAuthorizationState Raw Response: {state_res}")
+            
             state_type = state_res.get("@type")
+            is_reg = state_res.get("is_registered")
+            logger.info(f"[Layer 3 - TDLib] Processed State: state_type={state_type}, is_registered={is_reg} for {phone}")
             
             if state_type == "authorizationStateWaitCode":
-                if state_res.get("is_registered") == False:
+                if is_reg == False:
+                    logger.info(f"[Layer 3 - TDLib] is_registered is explicitly False. Phone {phone} is UNOCCUPIED.")
                     raise BackendPhoneUnoccupiedError()
                 else:
+                    logger.info(f"[Layer 3 - TDLib] is_registered is not False. Phone {phone} has SESSION.")
                     return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
             elif state_type == "authorizationStateWaitPassword":
+                logger.info(f"[Layer 3 - TDLib] State is WaitPassword. Phone {phone} has SESSION (2FA).")
                 raise BackendSessionPasswordNeededError()
                 
+            logger.info(f"[Layer 3 - TDLib] Unhandled state: {state_type}. Assuming HAS_SESSION for {phone}.")
             return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
                 
         finally:

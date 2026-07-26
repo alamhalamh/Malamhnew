@@ -23,9 +23,15 @@ class TDLibBackend(TelegramBackend):
         return self._is_connected
 
     async def is_user_authorized(self) -> bool:
-        res = await self.client.send({"@type": "getAuthorizationState"})
-        state = res.get("@type", "")
-        return state == "authorizationStateReady"
+        for _ in range(30):
+            res = await self.client.send({"@type": "getAuthorizationState"})
+            state = res.get("@type", "")
+            if state == "authorizationStateReady":
+                return True
+            if state in ["authorizationStateWaitPhoneNumber", "authorizationStateWaitCode", "authorizationStateWaitPassword", "authorizationStateClosed"]:
+                return False
+            await asyncio.sleep(0.1)
+        return False
 
     async def get_me(self) -> Dict[str, Any]:
         res = await self.client.send({"@type": "getMe"})

@@ -33,7 +33,7 @@ class SmartCheckStrategy:
     async def _check_via_external_bot(self, backend, phone, bot_username):
         """فحص الرقم عبر بوت فحص خارجي عبر رسائل تيليجرام المباشرة"""
         try:
-            before_send = datetime.datetime.now(datetime.timezone.utc)
+            before_send = int(time.time())
             await backend.send_message(bot_username, phone)
             logger.info(f"[ExternalBot] Sent {phone} to {bot_username}, waiting for response...")
 
@@ -43,7 +43,7 @@ class SmartCheckStrategy:
                 for msg in messages:
                     if msg.get("out"):
                         continue
-                    if msg.get("date") >= before_send and '📊' in (msg.get("text") or ''):
+                    if msg.get("date", 0) >= before_send and '📊' in (msg.get("text") or ''):
                         reply = msg.get("text")
                         if '🔐' in reply:
                             logger.info(f"[ExternalBot] ✅ Result: REGISTERED (Phone: {phone})")
@@ -289,13 +289,11 @@ class SmartCheckStrategy:
                     return ext_result
                 logger.warning(f"[Layer 4: ExternalBot] Failed to get clear response.")
                 is_success = True
-                result["status_text"] = "⚠️ الرقم لديه جلسة (فشل البوت الخارجي)"
-                return result
+                return {"status": "HAS_SESSION", "phone": phone, "status_text": "⚠️ الرقم لديه جلسة (فشل البوت الخارجي)"}
             else:
                 logger.warning(f"[Layer 4: ExternalBot] Not configured. Cannot determine accuracy.")
                 is_success = True
-                result["status_text"] = "⚠️ الرقم لديه جلسة (بدون بوت خارجي)"
-                return result
+                return {"status": "HAS_SESSION", "phone": phone, "status_text": "⚠️ الرقم لديه جلسة (بدون بوت خارجي)"}
 
         except BackendPhoneUnoccupiedError:
             logger.info(f"[Layer 3] Unoccupied error. Phone is Not Registered. (Phone: {phone})")

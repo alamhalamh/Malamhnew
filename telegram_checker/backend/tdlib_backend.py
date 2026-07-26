@@ -1,8 +1,11 @@
 import asyncio
+import logging
 from typing import Dict, Any, List, Optional
 from .base import TelegramBackend
 from .errors import *
 from .tdlib_binding.core import TDLibClient
+
+logger = logging.getLogger(__name__)
 
 class TDLibBackend(TelegramBackend):
     def __init__(self, client: TDLibClient):

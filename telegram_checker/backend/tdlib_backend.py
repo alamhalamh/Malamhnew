@@ -258,9 +258,9 @@ class TDLibBackend(TelegramBackend):
                     msg = res.get("message", "")
                     msg_upper = msg.upper()
                     code = res.get("code")
-                    if "BANNED" in msg_upper:
+                    if "BANNED" in msg_upper or "INVALID" in msg_upper:
                         raise BackendPhoneBannedError()
-                    elif "UNOCCUPIED" in msg_upper or "NOT_FOUND" in msg_upper or "INVALID" in msg_upper:
+                    elif "UNOCCUPIED" in msg_upper or "NOT_FOUND" in msg_upper:
                         raise BackendPhoneUnoccupiedError()
                     elif "SESSION_PASSWORD_NEEDED" in msg_upper:
                         raise BackendSessionPasswordNeededError()

@@ -258,7 +258,7 @@ class TDLibBackend(TelegramBackend):
                     msg = res.get("message", "")
                     msg_upper = msg.upper()
                     code = res.get("code")
-                    if "BANNED" in msg_upper or "INVALID" in msg_upper:
+                    if "PHONE_NUMBER_BANNED" in msg_upper or "PHONE_NUMBER_INVALID" in msg_upper:
                         raise BackendPhoneBannedError()
                     elif "UNOCCUPIED" in msg_upper or "NOT_FOUND" in msg_upper:
                         raise BackendPhoneUnoccupiedError()

@@ -313,9 +313,9 @@ class SmartCheckStrategy:
             return {"status": "BANNED", "phone": phone, "status_text": "📵 مـحـظـور"}
 
         except BackendPhoneInvalidError:
-            logger.info(f"[Layer 3] Invalid phone. Phone is Not Registered. (Phone: {phone})")
+            logger.info(f"[Layer 3] Invalid phone. (Phone: {phone})")
             is_success = True
-            return {"status": "NO_SESSION", "phone": phone, "status_text": "🆕 غير مسجل"}
+            return {"status": "UNKNOWN", "phone": phone, "status_text": "🔴 حالة غير معروفة"}
 
         except BackendFloodWaitError as e:
             await flood_manager.set_flood(account["id"], e.seconds)

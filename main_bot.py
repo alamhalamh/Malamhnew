@@ -1213,13 +1213,21 @@ async def main():
         while True:
             await asyncio.sleep(3600)
     except (KeyboardInterrupt, SystemExit):
-        if WEBHOOK_URL:
-            await main_app.bot.delete_webhook()
-            await runner.cleanup()
-        elif main_app.updater and main_app.updater.running:
-            await main_app.updater.stop()
-        await main_app.stop()
-        await main_app.shutdown()
+        pass
+
+    # Graceful Shutdown Sequence
+    logger.info("Shutting down bot gracefully... Closing TDLib sessions.")
+    from telegram_checker.telegram_client import telegram_client_manager
+    await telegram_client_manager.disconnect_all()
+    
+    if WEBHOOK_URL:
+        await main_app.bot.delete_webhook()
+        await runner.cleanup()
+    elif main_app.updater and main_app.updater.running:
+        await main_app.updater.stop()
+    await main_app.stop()
+    await main_app.shutdown()
+    logger.info("Bot shutdown complete.")
 
 if __name__ == '__main__':
     asyncio.run(main())

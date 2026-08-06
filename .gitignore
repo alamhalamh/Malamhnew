@@ -1,0 +1,10 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Tests & temporary scripts
+test_auth.py
+test_pg.py
+test_tdlib_layer3.py
+disable_layers.py

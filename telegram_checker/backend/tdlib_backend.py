@@ -305,8 +305,17 @@ class TDLibBackend(TelegramBackend):
                             return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
                             
                     elif code_type == "authenticationCodeTypeSms" or code_type == "authenticationCodeTypeCall":
-                        logger.info(f"[Layer 3 - TDLib] Sent via SMS/Call. Safe to assume NO_SESSION for {phone}.")
-                        raise BackendPhoneUnoccupiedError()
+                        is_reg = state_res.get("is_registered")
+                        if is_reg is True:
+                            logger.info(f"[Layer 3 - TDLib] Sent via SMS/Call but is_registered is True. Phone {phone} has SESSION.")
+                            # سيتم تسجيل الخروج في كتلة finally أدناه
+                            return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
+                        elif is_reg is False:
+                            logger.info(f"[Layer 3 - TDLib] Sent via SMS/Call and is_registered is False. NO_SESSION for {phone}.")
+                            raise BackendPhoneUnoccupiedError()
+                        else:
+                            logger.warning(f"[Layer 3 - TDLib] Sent via SMS/Call but is_registered is missing. Assuming HAS_SESSION for {phone}.")
+                            return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
                     else:
                         is_reg = state_res.get("is_registered")
                         if is_reg == False:
@@ -324,6 +333,11 @@ class TDLibBackend(TelegramBackend):
                 return {"status": "HAS_SESSION", "phone_code_hash": "tdlib_ephemeral"}
                     
             finally:
+                try:
+                    await client.send({"@type": "logOut"})
+                    await asyncio.sleep(0.3)
+                except Exception:
+                    pass
                 client.stop()
                 if os.path.exists(session_dir):
                     shutil.rmtree(session_dir, ignore_errors=True)

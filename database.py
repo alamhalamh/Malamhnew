@@ -50,8 +50,24 @@ accounts_cache = AsyncTTLCache(ttl_seconds=300)
 countries_cache = AsyncTTLCache(ttl_seconds=300)
 
 
+import socket
+from urllib.parse import urlparse, urlunparse
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# إصلاح مشكلة DNS الخاصة بـ Supabase Pooler على سيرفرات Railway
+if DATABASE_URL and "pooler.supabase.com" in DATABASE_URL:
+    try:
+        parsed = urlparse(DATABASE_URL)
+        host = parsed.hostname
+        # جلب الـ IP بشكل مباشر لتخطي مشكلة asyncpg مع الـ DNS
+        ip = socket.gethostbyname(host)
+        netloc = parsed.netloc.replace(host, ip)
+        parsed = parsed._replace(netloc=netloc)
+        DATABASE_URL = urlunparse(parsed)
+        logger.info(f"✅ Supabase Host Resolved to IP: {ip}")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to resolve Supabase host: {e}")
 _pool = None
 
 async def init_pool():

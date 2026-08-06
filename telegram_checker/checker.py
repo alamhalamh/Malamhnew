@@ -70,7 +70,7 @@ class SmartCheckStrategy:
         layer_results = {}
 
         # --- الطبقة الأولى والثانية (معطلة مؤقتاً للتجارب) ---
-        if False:
+        if True:
             # --- الطبقة الأولى: الاستيراد الصامت (Silent Import) ---
             logger.info(f"[Layer 1: Import] Silent Contact Import check for {phone}")
             try:
@@ -262,7 +262,7 @@ class SmartCheckStrategy:
             logger.info(f"[Layer 3] Direct connection returned code. Deferring to Layer 4 (External Bot).")
             
             # --- الطبقة الرابعة معطلة ---
-            if False:
+            if True:
                 # --- الطبقة الرابعة: بوت فحص خارجي ---
                 checker_bot = await db.get_setting("checker_bot_username")
                 if checker_bot:

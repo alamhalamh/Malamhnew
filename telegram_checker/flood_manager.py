@@ -19,7 +19,7 @@ class FloodManager:
         """
         التحقق من حالة الحظر المؤقت (FloodWait).
         """
-        flood_until = await asyncio.to_thread(database.get_account_flood, account_id)
+        flood_until = await database.get_account_flood(account_id)
         if not flood_until:
             return False
         # حماية إضافية: لو وصلت القيمة أصلاً aware (مثلاً من مصدر آخر مستقبلاً)، نجردها من tzinfo قبل المقارنة
@@ -32,13 +32,13 @@ class FloodManager:
         عند دخول الحساب FloodWait.
         """
         flood_until = _utcnow_naive() + timedelta(seconds=seconds)
-        await asyncio.to_thread(database.set_account_flood, account_id, flood_until)
+        await database.set_account_flood(account_id, flood_until)
 
     async def account_used(self, account_id):
         """
         زيادة عداد الفحص.
         """
-        await asyncio.to_thread(database.increase_account_checks, account_id)
+        await database.increase_account_checks(account_id)
 
     async def account_ok(self, account_id):
         """
